@@ -98,9 +98,28 @@
         })
       })
 
+      socket.on('notice to live', (user) => {
+        var message = document.createElement('h6')
+        message.textContent = `system：${user} has left~~`
+        messages.appendChild(message)
+      })
+
+      socket.on('loadTyping', (user) => {
+        let userDomList = Array.from(document.querySelectorAll('.collection-item h6'))
+        let selectUserDom = userDomList.filter(u => u.innerHTML.split(' ')[0] == user)[0]
+        selectUserDom.innerHTML = `${user} (Typing...)`
+      })
+
+      socket.on('clearTyping', (user) => {
+        let userDomList = Array.from(document.querySelectorAll('.collection-item h6'))
+        let selectUserDom = userDomList.filter(u => u.innerHTML.split(' ')[0] == user)[0]
+        selectUserDom.innerHTML = `${user}`
+      })
+
       // Submit login form
       loginForm.addEventListener('submit', (e) => {
         e.preventDefault()
+        // Get username
         const userName = document.getElementById('name').value
         // Emit login
         socket.emit('login', userName, () => {
@@ -112,17 +131,35 @@
           message.setAttribute('class', 'center blue-grey-text text-lighten-2')
           message.textContent = `Welcome ${userName} joined Chat`
           messages.appendChild(message)
-          // message.insertBefore(message, messages.lastChild)
         })
       })
 
 
       // Submit message
-      messageForm.addEventListener('submit', e => {
+      messageForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const msg = document.getElementById('textarea').value
         document.getElementById('textarea').value = ''
         socket.emit('chat message', msg)
+        socket.emit('clear Typing')
+      })
+
+      // Typing message
+      messageForm.addEventListener('keyup', () => {
+        const msg = document.getElementById('textarea').value
+        if (msg.length) {
+          socket.emit('Typing')
+        } else {
+          socket.emit('clear Typing')
+        }
+      })
+
+      messageForm.addEventListener('keydown', (e) => {
+        if (!e.shiftKey && e.keyCode === 13) {
+          e.preventDefault()
+          const btn = document.querySelector('button')
+          btn.click()
+        }
       })
 
       // Add Message to Card
@@ -130,7 +167,6 @@
         var message = document.createElement('h6')
         message.textContent = `${data.name}：${data.msg}`
         messages.appendChild(message)
-        message.insertBefore(message, messages.lastChild)
       })
     })()
   </script>

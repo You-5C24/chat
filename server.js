@@ -3,7 +3,7 @@ const app = express()
 const server = require('http').createServer(app)
 const io = require('socket.io')(server)
 
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 3003
 let connectedUser = []
 
 app.get('/', (req, res) => {
@@ -30,10 +30,15 @@ io.on("connection", (socket) => {
   socket.on('chat message', (msg) => {
     console.log(msg);
 
-    io.emit('output', {
-      name: userName,
-      msg: msg
-    })
+    io.emit('output', { name: userName, msg: msg })
+  })
+
+  socket.on('Typing', () => {
+    io.emit('loadTyping', userName)
+  })
+
+  socket.on('clear Typing', () => {
+    io.emit('clearTyping', userName)
   })
 
 
@@ -44,6 +49,7 @@ io.on("connection", (socket) => {
     connectedUser.splice(connectedUser.indexOf(userName), 1)
     // console.log(connectedUser);
     updateUserName()
+    io.emit('notice to live', userName)
   })
 
   // Update username
